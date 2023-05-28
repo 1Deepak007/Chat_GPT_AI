@@ -6,11 +6,6 @@ import user from "./assets/user.png"
 import loadingIcon from "./assets/loader.svg"
 import bot from "./assets/bot.png"
 
-// let arr = [
-//   {type:"user", post:"faffafsgas"},
-//   {type:"bot", post:"faffafsgas"},
-// ]
-
 
 function App() {
   const [input, setInput] = useState("");
@@ -22,7 +17,7 @@ function App() {
 
   const fetchBotResponse = async () => {
     const { data } = await axios.post(
-      "https://chatgpt-app-swag.onrender.com",
+      "https://chat-gpt-ai.onrender.com",
       { input },
       {
         headers: {
