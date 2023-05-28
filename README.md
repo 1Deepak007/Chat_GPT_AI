@@ -2,3 +2,4 @@
 
 Chat GPT 
 Deployed on vercel
+run - login to my vercel account
