@@ -1,27 +1,33 @@
-import { useState, useEffect } from 'react';
-import axios from "axios";
+import React, { useState, useEffect, useRef } from 'react';
+import axios from 'axios';
+import './App.css';
 
-import send from "./assets/send.svg"
-import user from "./assets/user.png"
-import loadingIcon from "./assets/loader.svg"
-import bot from "./assets/bot.png"
-
+// Placeholder imports – replace with your actual assets
+import send from './assets/send.svg';
+import user from './assets/user.png';
+import loadingIcon from './assets/loader.svg';
+import bot from './assets/bot.png';
 
 function App() {
-  const [input, setInput] = useState("");
+  const [input, setInput] = useState('');
   const [posts, setPosts] = useState([]);
+  const layoutRef = useRef(null);
 
-  useEffect(()=> {
-    document.querySelector(".layout").scrollTop = document.querySelector(".layout").scrollHeight;
-  },[posts]);
+  // Auto-scroll to bottom on new posts
+  useEffect(() => {
+    if (layoutRef.current) {
+      layoutRef.current.scrollTop = layoutRef.current.scrollHeight;
+    }
+  }, [posts]);
 
   const fetchBotResponse = async () => {
     const { data } = await axios.post(
-      "https://chat-gpt-ai.onrender.com",
+      "https://eighty-goats-teach.loca.lt", 
       { input },
       {
         headers: {
           "Content-Type": "application/json",
+          "bypass-tunnel-reminder": "true", 
         },
       }
     );
@@ -29,97 +35,130 @@ function App() {
   };
 
   const onSubmit = () => {
-    if (input.trim() === "") return;
-    updatePosts(input);
-    updatePosts("loading...", false, true);
-    setInput("")
+    if (input.trim() === '') return;
+    updatePosts(input, false, false);
+    updatePosts('loading...', false, true);
+    setInput('');
     fetchBotResponse().then((res) => {
       console.log(res);
-      updatePosts(res.bot.trim(), true);
+      updatePosts(res.bot.trim(), true, false);
     });
   };
 
   const autoTypingBotResponse = (text) => {
     let index = 0;
-    let interval = setInterval(()=> {
-      if(index < text.length){
+    const interval = setInterval(() => {
+      if (index < text.length) {
         setPosts((prevState) => {
-          let lastItem = prevState.pop();
-          if(lastItem.type !== "bot"){
-            prevState.push({
-              type:"bot",
-              post:text.charAt(index - 1),
+          const newPosts = [...prevState];
+          const lastItem = newPosts.pop();
+          if (lastItem.type !== 'bot') {
+            newPosts.push({
+              type: 'bot',
+              post: text.charAt(index - 1),
             });
-          }else{
-            prevState.push({
-              type:"bot",
+          } else {
+            newPosts.push({
+              type: 'bot',
               post: lastItem.post + text.charAt(index - 1),
             });
           }
-          return [...prevState];
+          return newPosts;
         });
         index++;
-      }else{
+      } else {
         clearInterval(interval);
       }
-    },30)
-  }
+    }, 30);
+  };
 
   const updatePosts = (post, isBot, isLoading) => {
     if (isBot) {
       autoTypingBotResponse(post);
     } else {
       setPosts((prevState) => {
-        return [...prevState, { type: isLoading ? "loading" : "userr", post }];
+        return [...prevState, { type: isLoading ? 'loading' : 'user', post }];
       });
     }
   };
 
   const onKeyUp = (e) => {
-    if (e.key === "Enter" || e.which === 13) {
+    if (e.key === 'Enter' || e.which === 13) {
       onSubmit();
     }
   };
 
   return (
-    <main className='chatGPT-app'>
-      <section className='chat-container'>
-        <div className="layout">
-          {posts.map((post, index) =>
-          (
-            <div key={index} className={`chat-bubble ${post.type === "bot" || post.type === "loading" ? "bot" : ""}`}>
+    <main className="app">
+      <div className="chat-container">
+        {/* Header */}
+        <header className="chat-header">
+          <div className="header-content">
+            <div className="bot-avatar">
+              <img src={bot} alt="Bot" />
+            </div>
+            <div className="header-info">
+              <h1>AI Assistant</h1>
+              <p>Online • Ready to help</p>
+            </div>
+          </div>
+          <div className="header-actions">
+            <button className="icon-btn">⚡</button>
+            <button className="icon-btn">⋮</button>
+          </div>
+        </header>
+
+        {/* Messages */}
+        <div className="layout" ref={layoutRef}>
+          {posts.map((post, index) => (
+            <div
+              key={index}
+              className={`message ${post.type === 'bot' || post.type === 'loading' ? 'bot' : 'user'}`}
+            >
               <div className="avatar">
-                <img src={post.type === "bot" || post.type === "loading" ? bot : user} />
+                <img
+                  src={
+                    post.type === 'bot' || post.type === 'loading' ? bot : user
+                  }
+                  alt="Avatar"
+                />
               </div>
-              {post.type === "loading" ? (
-                <div className="loader">
-                  <img src={loadingIcon} />
-                </div>
-              ) : (
-                <div className="post">{post.post}</div>
-              )}
+              {/* <div className="bubble"> */}
+              <div>
+                {post.type === 'loading' ? (
+                  <div className="typing-indicator">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                  </div>
+                ) : (
+                  <div className="post">{post.post}</div>
+                )}
+              </div>
             </div>
           ))}
         </div>
-      </section>
 
-
-      <footer>
-        <input
-          value={input}
-          className="composebar"
-          autoFocus
-          type="text"
-          placeholder='Ask Me Anything!'
-          onChange={(e) => setInput(e.target.value)}
-          onKeyUp={onKeyUp}
-        />
-        <div className="send-button" onClick={onSubmit}>
-          <img src={send} alt="" />
-        </div>
-      </footer>
+        {/* Footer / Input */}
+        <footer className="input-area">
+          <div className="input-wrapper">
+            <input
+              value={input}
+              className="composebar"
+              autoFocus
+              type="text"
+              placeholder="Ask me anything..."
+              onChange={(e) => setInput(e.target.value)}
+              onKeyUp={onKeyUp}
+            />
+            <button className="send-button" onClick={onSubmit}>
+              <img src={send} alt="Send" />
+            </button>
+          </div>
+        </footer>
+      </div>
     </main>
-  )
+  );
 }
 
-export default App
+export default App;
