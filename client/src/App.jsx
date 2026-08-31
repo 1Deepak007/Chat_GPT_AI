@@ -22,7 +22,7 @@ function App() {
 
   const fetchBotResponse = async () => {
     const { data } = await axios.post(
-      "https://eighty-goats-teach.loca.lt", 
+      "https://chat-gpt-ai-backend.onrender.com", 
       { input },
       {
         headers: {
