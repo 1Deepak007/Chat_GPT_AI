@@ -16,8 +16,7 @@ openai.com  => account details=> username:ds095536@gmail.com
 
 
 
-OPENai API
-Secret key => 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
+OPENAI_API_KEY=your_openai_api_key_here
 
 
 
