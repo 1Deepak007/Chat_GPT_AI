@@ -1,53 +1,43 @@
 import express from "express";
 import cors from "cors";
 import * as dotenv from "dotenv";
-import { Configuration, OpenAIApi } from "openai";
+import { GoogleGenAI } from "@google/genai";
 
-// const { Configuration, OpenAIApi } = require("openai");
-
-dotenv.config()
+dotenv.config();
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Initialize Google Gen AI client
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+
 app.get("/", async (req, res) => {
-    res.status(200).send({
-        message:"This is ChatGPT Ai App",
-    });
-});
-
-
-const configuration = new Configuration({
-    apiKey: process.env.OPENAI_API_KEY,
+  res.status(200).send({
+    message: "This is ChatGPT / Gemini AI App",
   });
-  const openai = new OpenAIApi(configuration);
-
+});
 
 app.post("/", async (req, res) => {
-    try {
-        const response = await openai.createCompletion({
-            model: "text-davinci-003",
-            prompt: req.body.input,
-            temperature: 0,           // defines how accurate answer is required
-            max_tokens: 4000,           // can give ans of 4000 characters 
-            top_p: 1,
-            frequency_penalty: 0.5,
-            presence_penalty: 0,
-            stop: ["\"\"\""],
-          });
-          
-          console.log("PASSED : ", req.body.input)
+  try {
+    // 1. Updated model string to a current active flash model
+    const response = await ai.models.generateContent({
+      model: "gemini-3.6-flash", // Use active model name (e.g. gemini-2.5-flash)
+      contents: req.body.input,
+    });
 
-          res.status(200).send({
-            bot: response.data.choices[0].text
-          })
+    console.log("PASSED : ", req.body.input);
 
-    } catch (err) {
-        console.log("FAILED : ", req.body.input)
-        console.error(err)
-        res.status(500).send(err)
-    }
+    // 2. Extract response text
+    res.status(200).send({
+      bot: response.text,
+    });
+
+  } catch (err) {
+    console.log("FAILED : ", req.body.input);
+    console.error(err);
+    res.status(500).send({ error: err.message || "Something went wrong" });
+  }
 });
 
-app.listen(4000, ()=> console.log("server is running on port 4000"));
+app.listen(4000, () => console.log("Server is running on port 4000"));
